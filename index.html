@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Corazón 3D</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .titulo {
+            position: fixed;
+            top: 25px;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 28px;
+            text-shadow: 0 0 15px red;
+            z-index: 10;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="titulo">❤️ feliz cumple ❤️</div>
+
+    <canvas id="corazon"></canvas>
+
+    <script>
+
+        const canvas = document.getElementById("corazon");
+        const ctx = canvas.getContext("2d");
+
+        let ancho;
+        let alto;
+
+        function ajustarPantalla() {
+
+            ancho = canvas.width = window.innerWidth;
+            alto = canvas.height = window.innerHeight;
+
+        }
+
+        ajustarPantalla();
+
+        window.addEventListener("resize", ajustarPantalla);
+
+
+        // CANTIDAD DE PUNTOS
+        const cantidad = 18000;
+
+        const puntos = [];
+
+
+        // CREAR EL CORAZÓN
+        for (let i = 0; i < cantidad; i++) {
+
+            let t = Math.random() * Math.PI * 2;
+
+            // Fórmula del corazón
+            let x = 16 * Math.pow(Math.sin(t), 3);
+
+            let y =
+                13 * Math.cos(t)
+                - 5 * Math.cos(2 * t)
+                - 2 * Math.cos(3 * t)
+                - Math.cos(4 * t);
+
+
+            // Rellenar el corazón
+            let escala = Math.sqrt(Math.random());
+
+            x *= escala;
+            y *= escala;
+
+
+            // Profundidad
+            let z = (Math.random() - 0.5) * 7;
+
+            puntos.push({
+                x: x,
+                y: y,
+                z: z,
+
+                tamaño: Math.random() * 2 + 0.5,
+
+                brillo: Math.random()
+            });
+
+        }
+
+
+        let rotacion = 0;
+        let tiempo = 0;
+
+
+        function dibujar() {
+
+            ctx.fillStyle = "rgba(0, 0, 0, 0.25)";
+            ctx.fillRect(0, 0, ancho, alto);
+
+
+            tiempo += 0.05;
+
+
+            // EFECTO DE LATIDO
+            let latido =
+                1 + Math.sin(tiempo * 2) * 0.035;
+
+
+            rotacion += 0.006;
+
+
+            const centroX = ancho / 2;
+            const centroY = alto / 2;
+
+
+            // ESCALA GENERAL
+            const escala = Math.min(ancho, alto) / 34;
+
+
+            const proyectados = [];
+
+
+            for (let p of puntos) {
+
+                // Giro 3D
+                let x1 =
+                    p.x * Math.cos(rotacion)
+                    - p.z * Math.sin(rotacion);
+
+                let z1 =
+                    p.x * Math.sin(rotacion)
+                    + p.z * Math.cos(rotacion);
+
+
+                // Profundidad
+                let profundidad =
+                    1 / (1 + z1 * 0.035);
+
+
+                let x2 =
+                    x1 * profundidad * escala * latido;
+
+                let y2 =
+                    p.y * profundidad * escala * latido;
+
+
+                proyectados.push({
+
+                    x: centroX + x2,
+
+                    y: centroY - y2,
+
+                    z: z1,
+
+                    tamaño:
+                        p.tamaño *
+                        profundidad *
+                        1.5,
+
+                    brillo: p.brillo
+
+                });
+
+            }
+
+
+            // Ordenar para crear profundidad
+            proyectados.sort((a, b) => a.z - b.z);
+
+
+            for (let p of proyectados) {
+
+                let brillo =
+                    0.45 + p.brillo * 0.55;
+
+
+                ctx.beginPath();
+
+                ctx.arc(
+                    p.x,
+                    p.y,
+                    p.tamaño,
+                    0,
+                    Math.PI * 2
+                );
+
+
+                ctx.fillStyle =
+                    `rgba(255, ${Math.floor(20 + brillo * 60)}, ${Math.floor(30 + brillo * 40)}, ${brillo})`;
+
+
+                ctx.shadowBlur = 8;
+
+                ctx.shadowColor = "red";
+
+
+                ctx.fill();
+
+            }
+
+
+            requestAnimationFrame(dibujar);
+
+        }
+
+
+        dibujar();
+
+    </script>
+
+</body>
+</html>
